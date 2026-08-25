@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Infra 学习实验室</title>
+  <meta name="description" content="从 nanoGPT 到 vLLM 与分布式训练的互动学习网站" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top"><span class="brand-mark">AI</span> Infra 学习实验室</a>
+    <nav>
+      <a href="#roadmap">路线</a><a href="#labs">互动实验</a><a href="#notes">学习笔记</a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle" aria-label="切换主题">☼</button>
+  </header>
+
+  <main id="top">
+    <section class="hero container">
+      <div class="hero-copy">
+        <p class="eyebrow">LEARN BY BUILDING</p>
+        <h1>把 AI Infra<br /><span>变成可运行的直觉</span></h1>
+        <p class="hero-text">从 nanoGPT 的“预测下一个 token”开始，逐步理解 KV Cache、请求调度、推理引擎和分布式训练。</p>
+        <div class="hero-actions"><a class="button primary" href="#labs">开始实验</a><a class="button secondary" href="#roadmap">查看路线</a></div>
+      </div>
+      <div class="terminal-card">
+        <div class="terminal-head"><i></i><i></i><i></i><span>inference_loop.py</span></div>
+        <pre><code><span class="muted"># 每一个 LLM 都从这里开始</span>
+<span class="keyword">while</span> <span class="value">not finished</span>:
+    logits = model(tokens, <span class="value">kv_cache</span>)
+    next_token = sample(logits,
+        temperature=<span class="number">0.8</span>)
+    tokens.append(next_token)
+    <span class="value">kv_cache</span>.update()
+
+<span class="comment"># 推理引擎的任务：让它更快</span></code></pre>
+      </div>
+    </section>
+
+    <section class="stats container">
+      <div><strong>4</strong><span>学习阶段</span></div><div><strong>3</strong><span>核心实验</span></div><div><strong>70/30</strong><span>推理 / 训练</span></div><div><strong>∞</strong><span>可验证的问题</span></div>
+    </section>
+
+    <section class="section container" id="roadmap">
+      <div class="section-heading"><div><p class="eyebrow">ROADMAP</p><h2>你的学习路线</h2></div><p>主方向：推理引擎　·　副方向：分布式训练</p></div>
+      <div class="roadmap">
+        <article class="road-card active"><span class="step">01</span><h3>模型基础</h3><p>nanoGPT · Transformer · PyTorch</p><ul><li>理解 token 到 logits</li><li>手写 KV Cache 生成</li></ul><span class="status">当前阶段</span></article>
+        <article class="road-card"><span class="step">02</span><h3>推理引擎</h3><p>nano-vLLM · vLLM · SGLang</p><ul><li>Scheduler 与请求生命周期</li><li>PagedAttention 与 Prefix Cache</li></ul><span class="status todo">待完成</span></article>
+        <article class="road-card"><span class="step">03</span><h3>性能优化</h3><p>CUDA · Triton · TensorRT-LLM</p><ul><li>TTFT / TPOT / Throughput</li><li>Profiler 与 Benchmark</li></ul><span class="status todo">待完成</span></article>
+        <article class="road-card"><span class="step">04</span><h3>分布式训练</h3><p>DDP · FSDP · TP / PP</p><ul><li>AllReduce 与 NCCL</li><li>显存账本与扩展效率</li></ul><span class="status todo">副线</span></article>
+      </div>
+    </section>
+
+    <section class="section lab-section" id="labs">
+      <div class="container"><div class="section-heading"><div><p class="eyebrow">INTERACTIVE LABS</p><h2>动手理解，而不是背概念</h2></div><p>调整参数，观察系统行为发生什么变化。</p></div>
+        <div class="lab-grid">
+          <article class="lab-card"><div class="lab-title"><span class="icon purple">↗</span><div><h3>Token 生成实验</h3><p>体验 temperature 如何影响下一个 token 的选择</p></div></div><label>Temperature <output id="tempValue">0.80</output><input id="temperature" type="range" min="0.1" max="1.5" step="0.05" value="0.8" /></label><div class="token-output" id="tokenOutput"></div><button class="button small" id="sampleBtn">生成下一个 token</button></article>
+          <article class="lab-card"><div class="lab-title"><span class="icon blue">▦</span><div><h3>KV Cache 账本</h3><p>估算并发请求会吃掉多少显存</p></div></div><div class="form-grid"><label>层数<input id="layers" type="number" value="32" min="1" /></label><label>KV heads<input id="heads" type="number" value="8" min="1" /></label><label>上下文<input id="context" type="number" value="4096" min="1" /></label><label>并发<input id="batch" type="number" value="8" min="1" /></label></div><div class="result" id="cacheResult"></div><button class="button small" id="calcCache">重新计算</button></article>
+          <article class="lab-card"><div class="lab-title"><span class="icon orange">≋</span><div><h3>请求调度模拟</h3><p>观察 continuous batching 如何接纳新请求</p></div></div><div class="queue" id="queue"></div><div class="queue-controls"><button class="button small" id="addRequest">加入请求</button><button class="button small ghost" id="tick">执行一轮 Decode</button></div><p class="lab-note" id="queueNote">点击“加入请求”开始模拟。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container" id="notes"><div class="section-heading"><div><p class="eyebrow">CONCEPT CARDS</p><h2>面试与源码阅读提示</h2></div></div><div class="concept-grid"><div><b>为什么 Decode 慢？</b><p>每轮只生成一个 token，计算规模小，却要反复读取历史 KV Cache，通常受显存带宽限制。</p></div><div><b>为什么需要 PagedAttention？</b><p>把逻辑连续的 KV Cache 映射到物理 block，减少碎片，让更多请求同时驻留 GPU。</p></div><div><b>训练副线学到什么程度？</b><p>先掌握 DDP、NCCL、FSDP/ZeRO，再理解 TP/PP；重点是显存、通信和扩展效率的 trade-off。</p></div></div></section>
+  </main>
+  <footer><div class="container"><span>AI Infra 学习实验室</span><span>Built for learning · 2026</span></div></footer>
+  <script src="app.js"></script>
+</body>
+</html>
