@@ -58,17 +58,37 @@ $('sampleBtn').addEventListener('click', () => {
 $('sampleSeed').addEventListener('change', () => resetSampler('随机序列已重置'));
 $('resetSampling').addEventListener('click', () => resetSampler('随机序列已重置'));
 
-function calculateCache() {
-  const layers = Number($('layers').value) || 1;
-  const heads = Number($('heads').value) || 1;
-  const context = Number($('context').value) || 1;
-  const batch = Number($('batch').value) || 1;
-  const headDim = 128;
-  const bytes = 2;
-  const gb = 2 * layers * heads * context * batch * headDim * bytes / 1024 ** 3;
-  $('cacheResult').innerHTML = `<strong>${gb.toFixed(2)} GB</strong> <span style="color:#999">KV Cache (FP16)</span>`;
+const kvLab = window.KvCacheLab;
+function cacheDimension(id, label) {
+  const raw = $(id).value.trim();
+  const value = Number(raw);
+  if (!raw || !Number.isSafeInteger(value) || value <= 0) {
+    throw new RangeError(`${label} 必须是大于 0 的整数。`);
+  }
+  return value;
 }
-['layers','heads','context','batch'].forEach(id => $(id).addEventListener('input', calculateCache));
+function calculateCache() {
+  try {
+    const inputs = {
+      layers: cacheDimension('layers', '层数'),
+      kvHeads: cacheDimension('heads', 'KV heads'),
+      headDim: cacheDimension('headDim', 'head_dim'),
+      contextTokens: cacheDimension('context', '上下文长度'),
+      batchSize: cacheDimension('batch', '并发数'),
+      bytesPerElement: kvLab.DTYPE_BYTES[$('dtype').value],
+    };
+    const result = kvLab.estimateKvCache(inputs);
+    $('cacheResult').innerHTML = `<strong>${kvLab.formatGib(result.gib)}</strong> <span style="color:#999">KV Cache · ${$('dtype').selectedOptions[0].textContent.split(' · ')[0]}</span>`;
+    $('cacheFormula').textContent = `2 (K+V) × ${inputs.layers} 层 × ${inputs.kvHeads} KV heads × ${inputs.contextTokens} tokens × ${inputs.batchSize} 并发 × ${inputs.headDim} head_dim × ${inputs.bytesPerElement} byte = ${result.bytes.toLocaleString('zh-CN')} bytes`;
+    $('cacheError').textContent = '';
+  } catch (error) {
+    $('cacheResult').innerHTML = '<strong>无法估算</strong>';
+    $('cacheFormula').textContent = '';
+    $('cacheError').textContent = error instanceof RangeError ? error.message : '估算参数无效，请检查后重试。';
+  }
+}
+['layers','heads','headDim','context','batch'].forEach(id => $(id).addEventListener('input', calculateCache));
+$('dtype').addEventListener('change', calculateCache);
 $('calcCache').addEventListener('click', calculateCache);
 calculateCache();
 

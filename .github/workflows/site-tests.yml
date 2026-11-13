@@ -16,5 +16,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Run sampling lab tests
-        run: node --test site/sampling.test.js
+      - name: Run interactive lab tests
+        run: node --test site/*.test.js

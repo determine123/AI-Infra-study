@@ -13,7 +13,7 @@ AI Infra 学习资料与实践仓库，按「基础 → CUDA/算子 → 分布�
 `site/index.html` 是无需后端即可打开的本地学习页面，包含三个实验：
 
 - Token 生成：用固定候选 logits 和稳定的 softmax 展示 temperature 对概率分布及实际采样结果的影响。
-- KV Cache 账本：按层数、KV heads、上下文长度和并发数估算 FP16 缓存规模。
+- KV Cache 账本：按层数、KV heads、head_dim、上下文长度、并发数与 KV 精度估算规模；页面同时展示逐项公式与精确字节数。
 - 请求调度：模拟 continuous batching 中请求加入、decode 与完成的过程。
 
 Token 实验使用可在页面中修改的固定随机种子，因此同一 seed、temperature 和采样顺序可以复现。它只用于解释采样机制，不代表真实模型推理或性能结果。
@@ -21,7 +21,7 @@ Token 实验使用可在页面中修改的固定随机种子，因此同一 seed
 运行不依赖第三方包的测试：
 
 ```bash
-node --test site/sampling.test.js
+node --test site/*.test.js
 ```
 
 CI 会在每次推送和拉取请求时执行同一测试。
